@@ -1,9 +1,10 @@
 require("dotenv").config();
-const { Sequelize, Model, DataTypes } = require("sequelize");
-const express = require("express");
-const app = express();
+let { Sequelize, Model, DataTypes } = require("sequelize");
+let express = require("express");
+let app = express();
+app.use(express.json());
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+let sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: "postgres",
   dialectOptions: {
     ssl: false,
@@ -11,79 +12,89 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   logging: false,
 });
 
-class Note extends Model {}
-Note.init(
+class Blog extends Model {}
+Blog.init(
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    content: {
+    title: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    important: {
-      type: DataTypes.BOOLEAN,
+    url: {
+      type: DataTypes.TEXT,
+      allowNull: false,
     },
-    date: {
-      type: DataTypes.DATE,
+    author: {
+      type: DataTypes.TEXT,
+    },
+    likes: {
+      type: DataTypes.INTEGER,
     },
   },
   {
     sequelize,
     underscored: true,
     timestamps: false,
-    modelName: "note",
+    modelName: "blog",
   },
 );
 
-app.get("/", async (req, res) => {
-  res.send("hello");
+Blog.sync(); //create the table if not already existed
+
+app.get("/api/blogs", async (req, res) => {
+  let blogs = await Blog.findAll();
+  res.json(blogs);
 });
 
-app.get("/api/notes", async (req, res) => {
-  const notes = await Note.findAll();
-  res.json(notes);
-});
-
-app.post("/api/notes", async (req, res) => {
+app.post("/api/blogs", async (req, res) => {
+  console.log(req.body);
   try {
-    const note = await Note.create({ ...req.body, date: new Date() });
-    return res.json(note);
+    let blog = await Blog.create({ ...req.body });
+    return res.json(blog);
   } catch (error) {
     return res.status(400).json({ error });
   }
 });
 
+app.delete("/api/blogs/:id", async (req, res) => {
+  try {
+    const blog = await Blog.findByPk(req.params.id);
+    if (!blog) {
+      return res.status(404).json({ error: "blog not found" });
+    }
+    await blog.destroy();
+    return res.status(204).end();
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
+
+// app.get("/api/blogs/:id", async (req, res) => {
+//   let blog = await Blog.findByPk(req.params.id);
+//   if (blog) {
+//     res.json(blog);
+//   } else {
+//     res.status(404).end();
+//   }
+// });
+
+// app.put("/api/blogs/:id", async (req, res) => {
+//   let blog = await Blog.findByPk(req.params.id);
+//   if (blog) {
+//     // note.important = req.body.important;
+//     blog.likes += 1;
+//     await blog.save();
+//     res.json(blog);
+//   } else {
+//     res.status(404).end();
+//   }
+// });
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-// require("dotenv").config();
-// const { Sequelize, QueryTypes } = require("sequelize");
-
-// const sequelize = new Sequelize(process.env.DATABASE_URL, {
-//   dialect: "postgres",
-//   dialectOptions: {
-//     ssl: false,
-//   },
-//   logging: false,
-// });
-
-// async function main() {
-//   try {
-//     await sequelize.authenticate();
-//     const notes = await sequelize.query("SELECT * FROM notes", {
-//       type: QueryTypes.SELECT,
-//     });
-//     console.log(notes);
-//   } catch (error) {
-//     console.error("Unable to connect to the database:", error);
-//   } finally {
-//     await sequelize.close();
-//   }
-// }
-
-// main();
