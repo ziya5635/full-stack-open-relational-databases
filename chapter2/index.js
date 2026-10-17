@@ -51,7 +51,6 @@ app.get("/api/blogs", async (req, res) => {
 });
 
 app.post("/api/blogs", async (req, res) => {
-  console.log(req.body);
   try {
     let blog = await Blog.create({ ...req.body });
     return res.json(blog);
