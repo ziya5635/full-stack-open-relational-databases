@@ -1,53 +1,41 @@
 let { Blog } = require("../models");
-
+let blogFinder = require("../middleware/blogFinder");
 let router = require("express").Router();
-
-async function blogFinder(req, res, next) {
-  req.blog = await Blog.findByPk(req.params.id);
-  if (!req.blog) {
-    return res.status(404).end();
-  }
-  next();
-}
 
 router.get("/", async (req, res) => {
   let blogs = await Blog.findAll();
   res.json(blogs);
 });
 
-router.post("/", async (req, res) => {
+//If next was called without an argument,
+//then the execution would simply move onto the next route or middleware.
+//If the next function is called with an argument,
+//then the execution will continue to the error handler middleware.
+router.post("/", async (req, res, next) => {
   try {
     let blog = await Blog.create({ ...req.body });
     return res.json(blog);
   } catch (error) {
-    return res.status(400).json({ error });
+    next(error);
+    // return res.status(400).json({ error });
   }
 });
 
-router.delete("/:id", blogFinder, async (req, res) => {
+router.delete("/:id", blogFinder, async (req, res, next) => {
   try {
-    // const blog = await Blog.findByPk(req.params.id);
-    // if (!blog) {
-    //   return res.status(404).json({ error: "blog not found" });
-    // }
     await req.blog.destroy();
     return res.status(204).end();
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    next(error);
+    // return res.status(400).json({ error: error.message });
   }
 });
 
 router.get("/:id", blogFinder, (req, res) => {
   return res.json(req.blog);
-  // let blog = await Blog.findByPk(req.params.id);
-  // if (blog) {
-  //   res.json(blog);
-  // } else {
-  //   res.status(404).end();
-  // }
 });
 
-router.put("/:id", blogFinder, async (req, res) => {
+router.put("/:id", blogFinder, async (req, res, next) => {
   try {
     let { likes } = req.body;
 
@@ -62,7 +50,8 @@ router.put("/:id", blogFinder, async (req, res) => {
 
     return res.json(req.blog);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    next(error);
+    // return res.status(400).json({ error: error.message });
   }
 });
 
