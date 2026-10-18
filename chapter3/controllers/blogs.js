@@ -47,16 +47,23 @@ router.get("/:id", blogFinder, (req, res) => {
   // }
 });
 
-// router.put("/:id", async (req, res) => {
-//   let blog = await Blog.findByPk(req.params.id);
-//   if (blog) {
-//     // note.important = req.body.important;
-//     blog.likes += 1;
-//     await blog.save();
-//     res.json(blog);
-//   } else {
-//     res.status(404).end();
-//   }
-// });
+router.put("/:id", blogFinder, async (req, res) => {
+  try {
+    let { likes } = req.body;
+
+    if (!Number.isInteger(likes) || likes < 0) {
+      return res
+        .status(400)
+        .json({ error: "likes must be a non-negative integer" });
+    }
+
+    req.blog.likes = likes;
+    await req.blog.save();
+
+    return res.json(req.blog);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
 
 module.exports = router;
