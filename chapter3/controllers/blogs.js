@@ -1,10 +1,21 @@
-let { Blog } = require("../models");
+let { Blog, User } = require("../models");
 let blogFinder = require("../middleware/blogFinder");
+let { NotFoundError } = require("../lib/exceptions");
 let router = require("express").Router();
 
-router.get("/", async (req, res) => {
-  let blogs = await Blog.findAll();
-  res.json(blogs);
+router.get("/", async (req, res, next) => {
+  try {
+    let blogs = await Blog.findAll({
+      attributes: { exclude: ["userId"] },
+      include: {
+        model: User,
+        attributes: ["name"],
+      },
+    });
+    res.json(blogs);
+  } catch (error) {
+    next(error);
+  }
 });
 
 //If next was called without an argument,
@@ -13,7 +24,13 @@ router.get("/", async (req, res) => {
 //then the execution will continue to the error handler middleware.
 router.post("/", async (req, res, next) => {
   try {
-    let blog = await Blog.create({ ...req.body });
+    if (!req.user) {
+      throw new NotFoundError("user not found while creating a blog");
+    }
+    let blog = await Blog.create({
+      ...req.body,
+      userId: user.id,
+    });
     return res.json(blog);
   } catch (error) {
     next(error);
