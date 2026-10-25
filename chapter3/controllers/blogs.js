@@ -25,7 +25,7 @@ router.get("/", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     if (!req.user) {
-      throw new NotFoundError("user not found while creating a blog");
+      throw new NotFoundError("user not found as creating a blog");
     }
     let blog = await Blog.create({
       ...req.body,
