@@ -6,28 +6,38 @@ class ActionError extends Error {
 }
 
 class DomainError extends Error {
+  static status = 400;
   constructor(message) {
     super(message);
     this.name = new.target.name;
   }
 }
-
-// class UnauthenticatedError extends DomainError {
-//   constructor(message = "Not logged in") {
-//     super(message);
-//   }
-// }
+//Unauthenticated: Identity is unknown.
+class UnauthenticatedError extends DomainError {
+  static status = 401;
+  constructor(message = "Not logged in") {
+    super(message);
+  }
+}
+//Unauthorized: Identity is known, but permission is denied.
+class UnauthorizedError extends DomainError {
+  static status = 403;
+  constructor(message = "Action not allowed") {
+    super(message);
+  }
+}
 
 class NotFoundError extends DomainError {
+  static status = 404;
   constructor(message = "Not found") {
     super(message);
   }
 }
 
-// class UsernameTakenError extends DomainError {
-//   constructor(message = "Username is already taken") {
-//     super(message);
-//   }
-// }
-
-module.exports = { ActionError, NotFoundError, DomainError };
+module.exports = {
+  ActionError,
+  NotFoundError,
+  DomainError,
+  UnauthorizedError,
+  UnauthenticatedError,
+};

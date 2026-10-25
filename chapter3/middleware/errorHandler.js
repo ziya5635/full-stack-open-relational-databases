@@ -1,3 +1,5 @@
+let { DomainError } = require("../lib/exceptions");
+
 function errorHandler(error, req, res, next) {
   console.error(error.message);
 
@@ -12,7 +14,9 @@ function errorHandler(error, req, res, next) {
   }
 
   if (error instanceof DomainError) {
-    return res.status(400).json({ error: error.message });
+    return res
+      .status(error.constructor.status ?? 400)
+      .json({ error: error.message });
   }
 
   // if (error.name === "NotFoundError") {

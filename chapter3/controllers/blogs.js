@@ -1,6 +1,10 @@
 let { Blog, User } = require("../models");
 let blogFinder = require("../middleware/blogFinder");
-let { NotFoundError } = require("../lib/exceptions");
+let {
+  NotFoundError,
+  UnauthorizedError,
+  UnauthenticatedError,
+} = require("../lib/exceptions");
 let router = require("express").Router();
 
 router.get("/", async (req, res, next) => {
@@ -40,11 +44,16 @@ router.post("/", async (req, res, next) => {
 
 router.delete("/:id", blogFinder, async (req, res, next) => {
   try {
+    if (!req.user?.id) {
+      throw new UnauthenticatedError("authentication required");
+    }
+    if (req.blog.userId !== req.user.id) {
+      throw new UnauthorizedError("user do not own this blog");
+    }
     await req.blog.destroy();
     return res.status(204).end();
   } catch (error) {
     next(error);
-    // return res.status(400).json({ error: error.message });
   }
 });
 
