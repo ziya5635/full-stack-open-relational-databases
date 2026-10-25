@@ -1,6 +1,7 @@
 let jwt = require("jsonwebtoken");
 let { SECRET } = require("../utils/config");
 let { User } = require("../models");
+const { UnauthenticatedError } = require("../lib/exceptions");
 
 async function tokenExtractor(req, res, next) {
   const authorization = req.get("authorization");
@@ -12,15 +13,16 @@ async function tokenExtractor(req, res, next) {
 
   try {
     const decodedToken = jwt.verify(authorization.substring(7), SECRET);
-
     if (decodedToken.id) {
-      const user = await User.findByPk(decodedToken.id);
+      let user = await User.findByPk(decodedToken.id);
       if (user) {
-        req.user = user; // attached only when both token and user exist
+        req.user = user.toJSON(); // attached only when both token and user exist
       }
+    } else {
+      throw new UnauthenticatedError("user not found");
     }
-  } catch {
-    // invalid/expired token -> treat as anonymous
+  } catch (error) {
+    next(error);
   }
 
   next();

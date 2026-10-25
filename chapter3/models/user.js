@@ -1,5 +1,6 @@
 let { Model, DataTypes } = require("sequelize");
 let { sequelize } = require("../utils/db");
+let bcrypt = require("bcrypt");
 
 class User extends Model {}
 
@@ -30,6 +31,18 @@ User.init(
     underscored: true,
     timestamps: true,
     modelName: "user",
+    hooks: {
+      beforeCreate: async (user) => {
+        if (user.password) {
+          user.password = await bcrypt.hash(user.password, 10);
+        }
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed("password") && user.password) {
+          user.password = await bcrypt.hash(user.password, 10);
+        }
+      },
+    },
   },
 );
 

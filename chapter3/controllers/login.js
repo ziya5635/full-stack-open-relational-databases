@@ -1,24 +1,28 @@
+let bcrypt = require("bcrypt");
 let jwt = require("jsonwebtoken");
 let router = require("express").Router();
 
 let { SECRET } = require("../utils/config");
-let User = require("../models");
+let { User } = require("../models");
+let { UnauthenticatedError } = require("../lib/exceptions");
 
 router.post("/", async (request, response) => {
-  let body = request.body;
+  let { username, password } = request.body;
 
-  let user = await User.findOne({
-    where: {
-      username: body.username,
-    },
-  });
+  if (!username || !password) {
+    throw new UnauthenticatedError("invalid username or password");
+  }
 
-  const passwordCorrect = body.password === "secret";
+  let user = await User.findOne({ where: { username } });
 
-  if (!(user && passwordCorrect)) {
-    return response.status(401).json({
-      error: "invalid username or password",
-    });
+  // bcrypt.compare is async and returns false (does not throw) for a wrong
+  // password. Guard against users with no password set (password is nullable).
+  const passwordCorrect = user?.password
+    ? await bcrypt.compare(password, user.password)
+    : false;
+
+  if (!passwordCorrect) {
+    throw new UnauthenticatedError("invalid username or password");
   }
 
   let userForToken = {

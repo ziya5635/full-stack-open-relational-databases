@@ -12,10 +12,12 @@ Blog.init(
     title: {
       type: DataTypes.TEXT,
       allowNull: false,
+      validate: { len: { args: [2], msg: "at least 2 characters" } },
     },
     url: {
       type: DataTypes.TEXT,
       allowNull: false,
+      validate: { isUrl: { msg: "invalid url given" } },
     },
     author: {
       type: DataTypes.TEXT,

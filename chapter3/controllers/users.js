@@ -5,6 +5,7 @@ let { User, Blog } = require("../models");
 router.get("/", async (req, res, next) => {
   try {
     let users = await User.findAll({
+      attributes: { exclude: ["password"] },
       include: {
         model: Blog,
         attributes: {
@@ -20,11 +21,11 @@ router.get("/", async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
-    let user = await User.create(req.body);
-    res.json(user);
+    let user = await User.create(req.body); // hook hashes password
+    let { password: _pw, ...safeUser } = user.toJSON();
+    res.json(safeUser);
   } catch (error) {
     next(error);
-    // return res.status(400).json({ error });
   }
 });
 

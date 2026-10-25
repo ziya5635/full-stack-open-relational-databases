@@ -1,3 +1,4 @@
+let jwt = require("jsonwebtoken");
 let { DomainError } = require("../lib/exceptions");
 
 function errorHandler(error, req, res, next) {
@@ -11,6 +12,16 @@ function errorHandler(error, req, res, next) {
   if (error.name === "SequelizeUniqueConstraintError") {
     const messages = error.errors.map((e) => e.message);
     return res.status(400).json({ error: messages.join(", ") });
+  }
+
+  // Expired must come before the generic JsonWebTokenError check,
+  // because TokenExpiredError is a subclass of it.
+  if (error instanceof jwt.TokenExpiredError) {
+    return res.status(401).json({ error: "token expired" });
+  }
+
+  if (error instanceof jwt.JsonWebTokenError) {
+    return res.status(401).json({ error: "invalid token" });
   }
 
   if (error instanceof DomainError) {

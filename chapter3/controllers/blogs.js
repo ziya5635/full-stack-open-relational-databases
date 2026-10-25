@@ -33,12 +33,11 @@ router.post("/", async (req, res, next) => {
     }
     let blog = await Blog.create({
       ...req.body,
-      userId: user.id,
+      userId: req.user.id,
     });
     return res.json(blog);
   } catch (error) {
     next(error);
-    // return res.status(400).json({ error });
   }
 });
 

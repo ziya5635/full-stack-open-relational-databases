@@ -1,4 +1,5 @@
 class ActionError extends Error {
+  static status = 400;
   constructor(message) {
     super(message);
     this.name = "ActionError";
