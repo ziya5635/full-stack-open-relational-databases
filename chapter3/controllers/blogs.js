@@ -5,9 +5,16 @@ let {
   UnauthorizedError,
   UnauthenticatedError,
 } = require("../lib/exceptions");
+let { Op } = require("sequelize");
 let router = require("express").Router();
 
 router.get("/", async (req, res, next) => {
+  let where = {};
+  if (req.query.search) {
+    where.title = {
+      [Op.iLike]: `%${req.query.search}%`,
+    };
+  }
   try {
     let blogs = await Blog.findAll({
       attributes: { exclude: ["userId"] },
@@ -15,6 +22,7 @@ router.get("/", async (req, res, next) => {
         model: User,
         attributes: ["name"],
       },
+      where,
     });
     res.json(blogs);
   } catch (error) {
