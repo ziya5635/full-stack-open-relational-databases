@@ -2,7 +2,12 @@ require("dotenv").config();
 let express = require("express");
 let { PORT } = require("./utils/config");
 let { connectToDatabase } = require("./utils/db");
-let { blogsRouter, loginRouter, usersRouter } = require("./controllers");
+let {
+  blogsRouter,
+  loginRouter,
+  usersRouter,
+  authorRouter,
+} = require("./controllers");
 let errorHandler = require("./middleware/errorHandler");
 let { syncModels } = require("./models");
 const tokenExtractor = require("./middleware/tokenExtractor");
@@ -14,6 +19,7 @@ app.use(tokenExtractor);
 app.use("/api/blogs", blogsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/login", loginRouter);
+app.use("/api/authors", authorRouter);
 app.use(errorHandler);
 
 async function start() {
