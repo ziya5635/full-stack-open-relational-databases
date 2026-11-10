@@ -10,11 +10,15 @@ let router = require("express").Router();
 
 router.get("/", async (req, res, next) => {
   let where = {};
-  if (req.query.search) {
-    where.title = {
-      [Op.iLike]: `%${req.query.search}%`,
-    };
+  const search = (req.query.search || "").trim();
+
+  if (search) {
+    where[Op.or] = [
+      { title: { [Op.iLike]: `%${search}%` } },
+      { author: { [Op.iLike]: `%${search}%` } },
+    ];
   }
+
   try {
     let blogs = await Blog.findAll({
       attributes: { exclude: ["userId"] },
